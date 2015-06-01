@@ -210,7 +210,7 @@ def main():
     app.listen(opts.port)
     
     api_app = tornado.web.Application(api_handlers, stats=stats)
-    api_app.listen(opts.api_port, opts.api_ip)
+    api_app.listen(opts.api_port)
     
     ioloop.IOLoop.instance().start()
 
