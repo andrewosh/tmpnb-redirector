@@ -14,3 +14,5 @@ Add hosts to be considered for redirection:
 You can remove instances with a DELETE request:
 
     curl -X DELETE -d '{"host": "https://tmpnb.org"}' http://127.0.0.1:9001/hosts
+
+The server can also be passed a user identifier, which should subsequently map to a single notebook instance. If that notebook is no longer available, a new one should be launched and that mapping should be updated. 
