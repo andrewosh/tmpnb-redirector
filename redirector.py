@@ -34,6 +34,8 @@ from tornado import ioloop
 
 from tornado.httpclient import HTTPRequest, HTTPError, AsyncHTTPClient
 
+from abc import abstractmethod
+
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
 @gen.coroutine
@@ -108,10 +110,42 @@ class StatsHandler(RequestHandler):
     def stats(self):
         return self.settings['stats']
 
-class RerouteHandler(RequestHandler):
-    """Redirect based on load"""
-    
+
+class APISpawnHandler(BaseRerouteHandler):
+    """ Spawn a container programmatically """
+
     def write_error(self, status_code, **kwargs):
+        (status_code, status_message, message) = self._handle_error(status_code, **kwargs)
+        # TODO: Handle different error messages
+        self.write({'status': 'full'})
+
+    def post(self):
+        if self.allow_origin:
+            self.set_header("Access-Control-Allow-Origin", self.allow_origin)
+        url = self._handle_request()
+        self.write({'url': url})
+
+
+class RedirectHandler(BaseRerouteHandler):
+    """ Redirects to containers based on load """
+
+    def write_error(self, status_code, **kwargs):
+        (status_code, status_message, message) = self._handle_error(status_code, **kwargs)
+        self.render("error.html",
+            status_code=status_code,
+            status_message=status_message,
+            message=message,
+        )
+
+    def get(self):
+        url = self._handle_request()
+        self.redirect(url, permanent=False)
+
+
+class BaseRerouteHandler(RequestHandler):
+    """ Manages spawning containers (if available) based on load """
+
+    def _handle_error(self, status_code, **kwargs):
         exc_info = kwargs.get('exc_info')
         message = ''
         status_message = responses.get(status_code, 'Unknown HTTP Error')
@@ -129,13 +163,9 @@ class RerouteHandler(RequestHandler):
                 status_message = reason
 
         self.set_header('Content-Type', 'text/html')
-        self.render("error.html",
-            status_code=status_code,
-            status_message=status_message,
-            message=message,
-        )
+        return (status_code, status_message, message)
 
-    def get(self):
+    def _handle_request(self):
         up = {host:stats for host,stats in self.stats.items() if not stats.get('down')}
         if not up:
             if self.stats:
@@ -156,11 +186,15 @@ class RerouteHandler(RequestHandler):
             cumsum += stats[key]
             if cumsum >= choice:
                 break
-        self.redirect(host + self.request.path, permanent=False)
-    
+        return host + self.request.path
+
     @property
     def stats(self):
         return self.settings['stats']
+
+    @property
+    def allow_origin(self):
+        return self.settings['allow_origin']
 
 def main():
     tornado.options.define('stats_period', default=60,
@@ -181,7 +215,8 @@ def main():
 
     handlers = [
         (r"/stats", StatsHandler),
-        (r'/.*', RerouteHandler),
+        (r'/api/spawn/', APISpawnHandler),
+        (r'/.*', RedirectHandler),
     ]
     
     api_handlers = [
