@@ -176,7 +176,8 @@ class APISpawnHandler(BaseRerouteHandler):
     def write_error(self, status_code, **kwargs):
         (status_code, status_message, message) = self._handle_error(status_code, **kwargs)
         # TODO: Handle different error messages
-        self.write({'status': 'full', 'message': message, 'status_code': status_code})
+        self.write({'status': 'full', 'status_message': status_message,
+                    'message': message, 'status_code': status_code})
 
     @gen.coroutine
     def post(self):
@@ -238,6 +239,7 @@ def main():
         xsrf_cookies=True,
         debug=True,
         autoescape=None,
+        allow_origin='*'
     )
     
     stats_poll_ms = 1e3 * opts.stats_period
