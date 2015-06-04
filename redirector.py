@@ -100,6 +100,8 @@ class HostsAPIHandler(RequestHandler):
 class StatsHandler(RequestHandler):
     def get(self):
         """Returns some statistics/metadata about the tmpnb servers"""
+        if self.allow_origin:
+            self.set_header("Access-Control-Allow-Origin", self.allow_origin)
         response = {
                 'available': sum(s['available'] for s in self.stats.values()),
                 'capacity': sum(s['capacity'] for s in self.stats.values()),
@@ -111,6 +113,10 @@ class StatsHandler(RequestHandler):
     @property
     def stats(self):
         return self.settings['stats']
+
+    @property
+    def allow_origin(self): 
+        return self.settings['allow_origin']
 
 
 class BaseRerouteHandler(RequestHandler):
