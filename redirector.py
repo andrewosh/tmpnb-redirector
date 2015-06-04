@@ -136,7 +136,7 @@ class BaseRerouteHandler(RequestHandler):
         self.set_header('Content-Type', 'text/html')
         return (status_code, status_message, message)
 
-    def _handle_request(self, path):
+    def _handle_request(self, path=None):
         up = {host:stats for host,stats in self.stats.items() if not stats.get('down')}
         if not up:
             if self.stats:
@@ -186,9 +186,9 @@ class APISpawnHandler(BaseRerouteHandler):
         if self.allow_origin:
             self.set_header("Access-Control-Allow-Origin", self.allow_origin)
         path = json.loads(self.request.body.decode('utf8', 'replace'))['path']
-        worker_url = self._handle_request(path)
+        worker_url = self._handle_request()
         spawn_request = requests.post(urlparse.urljoin(worker_url, "api/spawn/"))
-        self.write({'url': spawn_request.json()['url']})
+        self.write({'url': urlparse.urljoin(spawn_request.json()['url'], path)})
 
 
 class RedirectHandler(BaseRerouteHandler):
