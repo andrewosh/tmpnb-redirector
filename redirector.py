@@ -17,7 +17,8 @@ Remove them with DELETE
 import json
 import random
 
-from urlparse import urlparse, urljoin
+import urlparse
+
 try:
     # py3
     from http.client import responses
@@ -72,7 +73,7 @@ class HostsAPIHandler(RequestHandler):
     def _get_host(self):
         try:
             host = json.loads(self.request.body.decode('utf8', 'replace'))['host']
-            scheme = urlparse(host).scheme
+            scheme = urlparse.urlparse(host).scheme
             if(scheme == 'http' or scheme == 'https'):
                 return host
 
@@ -224,7 +225,7 @@ def main():
     handlers = [
         (r"/stats", StatsHandler),
         (r'/api/spawn/', APISpawnHandler),
-        (r'/(.*)?', RedirectHandler),
+        (r'/(.*)', RedirectHandler),
     ]
     
     api_handlers = [
