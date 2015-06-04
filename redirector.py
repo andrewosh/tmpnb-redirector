@@ -17,7 +17,7 @@ Remove them with DELETE
 import json
 import random
 
-from urlparse import urlparse
+from urlparse import urlparse, urljoin
 try:
     # py3
     from http.client import responses
@@ -183,8 +183,9 @@ class APISpawnHandler(BaseRerouteHandler):
     def post(self):
         if self.allow_origin:
             self.set_header("Access-Control-Allow-Origin", self.allow_origin)
-        url = self._handle_request()
-        self.write({'url': url})
+        target = json.loads(self.request.body.decode('utf8', 'replace'))['target']
+        base_url = self._handle_request()
+        self.write({'url': urlparse.urljoin(base_url, target)})
 
 
 class RedirectHandler(BaseRerouteHandler):
@@ -223,7 +224,7 @@ def main():
     handlers = [
         (r"/stats", StatsHandler),
         (r'/api/spawn/', APISpawnHandler),
-        (r'/.*', RedirectHandler),
+        (r'/(.*)?', RedirectHandler),
     ]
     
     api_handlers = [
