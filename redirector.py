@@ -36,6 +36,7 @@ from tornado import ioloop
 from tornado.httpclient import HTTPRequest, HTTPError, AsyncHTTPClient
 
 from abc import abstractmethod
+import requests
 
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
@@ -135,7 +136,7 @@ class BaseRerouteHandler(RequestHandler):
         self.set_header('Content-Type', 'text/html')
         return (status_code, status_message, message)
 
-    def _handle_request(self):
+    def _handle_request(self, path):
         up = {host:stats for host,stats in self.stats.items() if not stats.get('down')}
         if not up:
             if self.stats:
@@ -156,7 +157,7 @@ class BaseRerouteHandler(RequestHandler):
             cumsum += stats[key]
             if cumsum >= choice:
                 break
-        return host + self.request.path
+        return urlparse.urljoin(host, path)
 
     @property
     def stats(self):
@@ -184,9 +185,10 @@ class APISpawnHandler(BaseRerouteHandler):
     def post(self):
         if self.allow_origin:
             self.set_header("Access-Control-Allow-Origin", self.allow_origin)
-        target = json.loads(self.request.body.decode('utf8', 'replace'))['target']
-        base_url = self._handle_request()
-        self.write({'url': urlparse.urljoin(base_url, target)})
+        path = json.loads(self.request.body.decode('utf8', 'replace'))['path']
+        worker_url = self._handle_request(path)
+        spawn_request = requests.post(urlparse.urljoin(worker_url, "api/spawn/"))
+        self.write({'url': spawn_request.json()['url']})
 
 
 class RedirectHandler(BaseRerouteHandler):
@@ -200,8 +202,9 @@ class RedirectHandler(BaseRerouteHandler):
             message=message,
         )
 
-    def get(self):
-        url = self._handle_request()
+    def get(self, path=None):
+        url = self._handle_request(path)
+	print "Redirecting to %s" % url
         self.redirect(url, permanent=False)
 
 
