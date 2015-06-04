@@ -111,41 +111,6 @@ class StatsHandler(RequestHandler):
         return self.settings['stats']
 
 
-class APISpawnHandler(BaseRerouteHandler):
-    """ Spawn a container programmatically """
-
-    def check_xsrf_cookie(self):
-        # This method is overridden in order to prevent XSRF cookie checking in this handler only
-        pass
-
-    def write_error(self, status_code, **kwargs):
-        (status_code, status_message, message) = self._handle_error(status_code, **kwargs)
-        # TODO: Handle different error messages
-        self.write({'status': 'full'})
-
-    def post(self):
-        if self.allow_origin:
-            self.set_header("Access-Control-Allow-Origin", self.allow_origin)
-        url = self._handle_request()
-        self.write({'url': url})
-
-
-class RedirectHandler(BaseRerouteHandler):
-    """ Redirects to containers based on load """
-
-    def write_error(self, status_code, **kwargs):
-        (status_code, status_message, message) = self._handle_error(status_code, **kwargs)
-        self.render("error.html",
-            status_code=status_code,
-            status_message=status_message,
-            message=message,
-        )
-
-    def get(self):
-        url = self._handle_request()
-        self.redirect(url, permanent=False)
-
-
 class BaseRerouteHandler(RequestHandler):
     """ Manages spawning containers (if available) based on load """
 
@@ -199,6 +164,42 @@ class BaseRerouteHandler(RequestHandler):
     @property
     def allow_origin(self):
         return self.settings['allow_origin']
+
+
+class APISpawnHandler(BaseRerouteHandler):
+    """ Spawn a container programmatically """
+
+    def check_xsrf_cookie(self):
+        # This method is overridden in order to prevent XSRF cookie checking in this handler only
+        pass
+
+    def write_error(self, status_code, **kwargs):
+        (status_code, status_message, message) = self._handle_error(status_code, **kwargs)
+        # TODO: Handle different error messages
+        self.write({'status': 'full'})
+
+    def post(self):
+        if self.allow_origin:
+            self.set_header("Access-Control-Allow-Origin", self.allow_origin)
+        url = self._handle_request()
+        self.write({'url': url})
+
+
+class RedirectHandler(BaseRerouteHandler):
+    """ Redirects to containers based on load """
+
+    def write_error(self, status_code, **kwargs):
+        (status_code, status_message, message) = self._handle_error(status_code, **kwargs)
+        self.render("error.html",
+            status_code=status_code,
+            status_message=status_message,
+            message=message,
+        )
+
+    def get(self):
+        url = self._handle_request()
+        self.redirect(url, permanent=False)
+
 
 def main():
     tornado.options.define('stats_period', default=60,
