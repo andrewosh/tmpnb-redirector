@@ -178,6 +178,7 @@ class APISpawnHandler(BaseRerouteHandler):
         # TODO: Handle different error messages
         self.write({'status': 'full', 'message': message, 'status_code': status_code})
 
+    @gen.coroutine
     def post(self):
         if self.allow_origin:
             self.set_header("Access-Control-Allow-Origin", self.allow_origin)
