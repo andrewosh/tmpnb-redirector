@@ -176,7 +176,7 @@ class APISpawnHandler(BaseRerouteHandler):
     def write_error(self, status_code, **kwargs):
         (status_code, status_message, message) = self._handle_error(status_code, **kwargs)
         # TODO: Handle different error messages
-        self.write({'status': 'full'})
+        self.write({'status': 'full', 'message': message, 'status_code': status_code})
 
     def post(self):
         if self.allow_origin:
