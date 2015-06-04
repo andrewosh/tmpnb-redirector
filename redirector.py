@@ -114,6 +114,10 @@ class StatsHandler(RequestHandler):
 class APISpawnHandler(BaseRerouteHandler):
     """ Spawn a container programmatically """
 
+    def check_xsrf_cookie(self):
+        # This method is overridden in order to prevent XSRF cookie checking in this handler only
+        pass
+
     def write_error(self, status_code, **kwargs):
         (status_code, status_message, message) = self._handle_error(status_code, **kwargs)
         # TODO: Handle different error messages
