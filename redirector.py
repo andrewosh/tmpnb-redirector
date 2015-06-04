@@ -188,9 +188,9 @@ class APISpawnHandler(BaseRerouteHandler):
         path = json.loads(self.request.body.decode('utf8', 'replace'))['path']
         worker_url = self._handle_request()
         spawn_request = requests.post(urlparse.urljoin(worker_url, "api/spawn/"))
-        user_url = urlparse.urljoin(worker_url, spawn_request.json()['url'])
-        full_url = urlparse.urljoin(user_url, path)
-        self.write({'url': full_url})
+        url_json = spawn_request.json()
+        user_url = urlparse.urljoin(worker_url, url_json['url'])
+        self.write({'url': user_url + path})
 
 
 class RedirectHandler(BaseRerouteHandler):
@@ -206,7 +206,6 @@ class RedirectHandler(BaseRerouteHandler):
 
     def get(self, path=None):
         url = self._handle_request(path)
-	print "Redirecting to %s" % url
         self.redirect(url, permanent=False)
 
 
